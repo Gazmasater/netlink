@@ -1,5 +1,7 @@
 module test.com
 
+//		^^^^^^^ название должно содержать путь как оно в гитхабе у тебя размещается, т.е. github.com/Gazmasater/netlink
+
 go 1.22.3
 
 require github.com/mdlayher/netlink v1.7.2
