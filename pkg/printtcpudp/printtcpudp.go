@@ -1,7 +1,7 @@
-package printttcpudp
+package printtcpudp
 
 import (
-	"github.com/Gazmasater/netlink/netlinkparser"
+	"github.com/Gazmasater/netlink/internal/netlinkparser"
 
 	"fmt"
 )

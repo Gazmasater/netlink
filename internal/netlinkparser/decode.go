@@ -7,16 +7,12 @@ import (
 	"strconv"
 
 	"github.com/mdlayher/netlink"
-	"golang.org/x/sys/unix"
 )
 
-const NFTA_TRACE_MAX = unix.NFTA_TRACE_PAD
 const (
-	TlHeaderLen = 8
 	NlHeaderLen = 20
 )
 
-// ParseMessage разбирает и выводит информацию из Netlink сообщения
 type PacketInfo struct {
 	SrcIP    string
 	DstIP    string

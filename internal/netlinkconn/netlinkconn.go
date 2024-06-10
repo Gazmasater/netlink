@@ -1,4 +1,4 @@
-package netlinkconnect
+package netlinkconn
 
 import (
 	"github.com/mdlayher/netlink"
