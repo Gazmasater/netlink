@@ -2,30 +2,29 @@ package netlinkconn
 
 import (
 	"github.com/mdlayher/netlink"
-	"go.uber.org/zap"
+	"github.com/pkg/errors"
 	"golang.org/x/sys/unix"
 )
 
 const (
 	NETLINK_NETFILTER = unix.NETLINK_NETFILTER
 	NFNLGRP_NFTRACE   = unix.NFNLGRP_NFTRACE
+	//                       ^^^^^^^^^^^^ какой смысл в переопределении этих констант?
 )
 
-func ConnectToNetlink(logger *zap.Logger) (*netlink.Conn, error) {
+// TODO Нет смысла выносить создание подключения в отдельный пакет. Соединение нужно создавать там где оно и планируется использоваться, т.е. в твоем случае в netlinkprocess.go (см TODO)
+func ConnectToNetlink() (*netlink.Conn, error) {
 	// Подключение к Netlink
 	conn, err := netlink.Dial(NETLINK_NETFILTER, nil)
 	if err != nil {
-		logger.Error("Ошибка подключения", zap.Error(err))
-		return nil, err
+		return nil, errors.WithMessage(err, "Ошибка подключения")
 	}
 
 	// Присоединение к группе Netlink для отслеживания трассировок пакетов
 	if err := conn.JoinGroup(NFNLGRP_NFTRACE); err != nil {
-		logger.Error("Ошибка подписки на группу", zap.Error(err))
 		conn.Close()
-		return nil, err
+		return nil, errors.WithMessage(err, "Ошибка подписки на группу")
 	}
 
-	logger.Info("Слушаем Netlink сообщения...")
 	return conn, nil
 }
