@@ -23,7 +23,7 @@ type PacketInfo struct {
 
 func Decode(msg netlink.Message) (PacketInfo, error) {
 
-	// Заголовок IPv4 начинается с 96-го байта
+	// Заголовок IPv4 начин с 96-го байта
 	ipHeader := msg.Data[96:]
 
 	// Проверяем, что длина IP заголовка достаточна
