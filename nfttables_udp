@@ -4,3 +4,6 @@ sudo nft add rule ip filter input udp dport 10000-12345 counter log prefix \"TRA
 sudo nft add rule ip filter input udp dport 10000-12345 meta nftrace set 1
 
 
+//Пакет UDP
+echo -n "Hello, TCP Server!" | nc -u 127.0.0.2 12345
+

@@ -2,29 +2,29 @@ package main
 
 import (
 	"fmt"
-	"os"
+	"log"
 
-	"github.com/mdlayher/netlink"
-	"test.com/data"
-	"test.com/util"
+	"github.com/Gazmasater/netlink/logger"
+	"github.com/Gazmasater/netlink/netlinkconnect"
+	"github.com/Gazmasater/netlink/netlinkparser"
+	"github.com/Gazmasater/netlink/printttcpudp"
+
+	"go.uber.org/zap"
 )
 
 func main() {
 
-	// Подключение к Netlink
-	conn, err := netlink.Dial(data.NETLINK_NETFILTER, nil)
+	logger, err := logger.InitLogger()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Ошибка подключения: %v\n", err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
-	defer conn.Close()
+	logger.Info("Logger initialized successfully")
+	defer logger.Sync()
 
-	fmt.Println("Слушаем Netlink сообщения...")
-
-	// Присоединение к группе Netlink для отслеживания трассировок пакетов
-	if err := conn.JoinGroup(data.NFNLGRP_NFTRACE); err != nil {
-		fmt.Fprintf(os.Stderr, "Ошибка подписки на группу: %v\n", err)
-		os.Exit(1)
+	conn, err := netlinkconnect.ConnectToNetlink(logger)
+	if err != nil {
+		logger.Error("Ошибка подключения к Netlink", zap.Error(err))
+		return
 	}
 
 	// Бесконечный цикл для приема и обработки сообщений
@@ -32,7 +32,7 @@ func main() {
 		// Получение сообщений от Netlink
 		msgs, err := conn.Receive()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Ошибка получения сообщения: %v\n", err)
+			logger.Error("Ошибка получения сообщения", zap.Error(err))
 			continue
 		}
 
@@ -41,8 +41,16 @@ func main() {
 			// Проверка, что тип сообщения соответствует требуемому и длина данных достаточна
 			if len(msg.Data) >= 96 {
 				// Вызов функции ParseMessage для обработки сообщения
-				util.ParseMessage(msg)
+				packet, err := netlinkparser.Decode(msg)
+				if err != nil {
+					fmt.Println(err)
+					continue
+				}
+
+				// Выводим информацию о пакете
+				printttcpudp.PrintPacketInfo(packet)
 			}
 		}
+
 	}
 }
