@@ -65,12 +65,3 @@ func Decode(msg netlink.Message) (PacketInfo, error) {
 		Protocol: protocol_string,
 	}, nil
 }
-
-func PrintPacketInfo(packet PacketInfo) {
-	fmt.Printf("Источник IP: %s\n", packet.SrcIP)
-	fmt.Printf("Пункт назначения IP: %s\n", packet.DstIP)
-	fmt.Printf("Источник порт: %s\n", packet.SrcPort)
-	fmt.Printf("Пункт назначения порт: %s\n", packet.DstPort)
-	fmt.Printf("Протокол: %s\n", packet.Protocol)
-	fmt.Println()
-}
