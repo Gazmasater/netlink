@@ -2,7 +2,6 @@ package netlinkprocess
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/Gazmasater/netlink/internal/netlinkparser"
 	"github.com/Gazmasater/netlink/pkg/logger"
@@ -48,8 +47,8 @@ func ProcessNetlinkMessages(ctx context.Context, conn *netlink.Conn) {
 				if len(msg.Data) >= 96 {
 					packet, err := netlinkparser.Decode(msg)
 					if err != nil {
-						fmt.Println(err)
-						continue
+						logger.Sugar().Fatal(err)
+						return
 					}
 
 					// Выводим информацию о пакете
