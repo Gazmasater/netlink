@@ -6,20 +6,34 @@ import (
 	"github.com/Gazmasater/netlink/internal/netlinkparser"
 	"github.com/Gazmasater/netlink/pkg/logger"
 	"github.com/Gazmasater/netlink/pkg/printtcpudp"
+	"github.com/pkg/errors"
+	"golang.org/x/sys/unix"
 
 	"github.com/mdlayher/netlink"
 )
 
 // TODO Обычно, когда речь идет о процессах, их обычно описывают как минимум 2мя методами:
 // Run(ctx) error и Close() error (См ниже)
-func ProcessNetlinkMessages(ctx context.Context, conn *netlink.Conn) {
-	//                                           ^^^^^^^^^^^^^^^^^ netlink.Conn нужно создавать и закрывать внутри метода, нет смысла тянуть его извне
+func ProcessNetlinkMessages(ctx context.Context) error {
+	// ^^^^^^^^^^^^^^^^^ netlink.Conn нужно создавать и закрывать внутри метода, нет смысла тянуть его извне
+
+	conn, err := netlink.Dial(unix.NETLINK_NETFILTER, nil)
+	if err != nil {
+		return errors.WithMessage(err, "Ошибка подключения")
+	}
+
+	// Присоединение к группе Netlink для отслеживания трассировок пакетов
+	if err := conn.JoinGroup(unix.NFNLGRP_NFTRACE); err != nil {
+		conn.Close()
+		return errors.WithMessage(err, "Ошибка подписки на группу")
+	}
+
 	log := logger.FromContext(ctx).Named("collector")
 	for {
 		select {
 		case <-ctx.Done():
 			log.Info("Завершение работы по сигналу")
-			return
+			return err
 		default: //TODO вот смешивать case и default в данном случае не оч хорошо! Лучше реализовать прием сообщений через канал,
 			// т.е. как писал в прошлый раз здесь должно быть:
 			/*
@@ -47,8 +61,8 @@ func ProcessNetlinkMessages(ctx context.Context, conn *netlink.Conn) {
 				if len(msg.Data) >= 96 {
 					packet, err := netlinkparser.Decode(msg)
 					if err != nil {
-						logger.Sugar().Fatal(err)
-						return
+
+						return err
 					}
 
 					// Выводим информацию о пакете
