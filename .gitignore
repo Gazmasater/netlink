@@ -1,4 +1,4 @@
 flags
 nftables_tcp
 nfttables_udp
-структура tcp
+struct_tcp
