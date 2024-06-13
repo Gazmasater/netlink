@@ -20,7 +20,6 @@ func main() {
 	if err := collector.Run(ctx); err != nil {
 		logger.Error(ctx, "Error running collector", zap.Error(err))
 	}
-
 	logger.SetLevel(zap.InfoLevel)
 	logger.Info(ctx, "-= BYE =-")
 }
