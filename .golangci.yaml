@@ -1,6 +1,5 @@
 linters:
   enable:
     - govet
-    - golint
+    - revive
     - staticcheck
-    - gofmt
