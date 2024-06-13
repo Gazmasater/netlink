@@ -20,6 +20,14 @@ type Collector struct {
 	RcvNetlinkMsgs chan []netlink.Message
 }
 
+func NewCollector() *Collector {
+	return &Collector{
+		stop:           make(chan struct{}),
+		stopped:        make(chan struct{}),
+		RcvNetlinkMsgs: make(chan []netlink.Message),
+	}
+}
+
 func (c *Collector) Run(ctx context.Context) error {
 	var doRun bool
 
