@@ -1,8 +1,0 @@
-Бит 0 (FIN): 0 (false)
-Бит 1 (SYN): 1 (true)     00000010
-Бит 2 (RST): 0 (false)
-Бит 3 (PSH): 0 (false)
-Бит 4 (ACK): 0 (true)    00010000
-Бит 5 (URG): 0 (false)
-Бит 6 (ECE): 0 (false)
-Бит 7 (CWR): 0 (false)
