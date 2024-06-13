@@ -3,3 +3,4 @@ linters:
     - govet
     - revive
     - staticcheck
+    - gofmt
