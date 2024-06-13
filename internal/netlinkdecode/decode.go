@@ -22,9 +22,7 @@ type PacketInfo struct {
 }
 
 func Decode(msg netlink.Message) (PacketInfo, error) {
-
-	// Заголовок IPv4 начин с 96-го байта
-	ipHeader := msg.Data[96:]
+	ipHeader := msg.Data[0:]
 
 	// Проверяем, что длина IP заголовка достаточна
 	if len(ipHeader) < NlHeaderLen {
@@ -32,32 +30,42 @@ func Decode(msg netlink.Message) (PacketInfo, error) {
 	}
 
 	// Извлечение IP адресов и протокола
-	srcIP := ipHeader[12:16]
-	dstIP := ipHeader[16:20]
-	protocol := ipHeader[9]
-	var protocol_string string
+	srcIP := ipHeader[108:112]
+	dstIP := ipHeader[112:116]
+	protocol := ipHeader[105]
+	var protocolString string
 	switch protocol {
 	case 6:
-		protocol_string = "TCP"
+		protocolString = "TCP"
 	case 17:
-		protocol_string = "UDP"
+		protocolString = "UDP"
 	}
 
-	src_IP := net.IP(srcIP).String()
-	dst_IP := net.IP(dstIP).String()
+	srcIPStr := net.IP(srcIP).String()
+	dstIPStr := net.IP(dstIP).String()
 
 	// Извлечение портов
-	srcPort := binary.BigEndian.Uint16(ipHeader[24:26])
-	dstPort := binary.BigEndian.Uint16(ipHeader[26:28])
+	srcPort := binary.BigEndian.Uint16(ipHeader[120:122])
+	dstPort := binary.BigEndian.Uint16(ipHeader[122:124])
 
-	srcPort_str := strconv.FormatUint(uint64(srcPort), 10)
-	dstPort_str := strconv.FormatUint(uint64(dstPort), 10)
+	srcPortStr := strconv.FormatUint(uint64(srcPort), 10)
+	dstPortStr := strconv.FormatUint(uint64(dstPort), 10)
 
-	return PacketInfo{
-		SrcIP:    src_IP,
-		DstIP:    dst_IP,
-		SrcPort:  srcPort_str,
-		DstPort:  dstPort_str,
-		Protocol: protocol_string,
-	}, nil
+	if protocolString == "TCP" {
+
+		flagsByte1 := ipHeader[133]
+		bitString1 := fmt.Sprintf("%08b", flagsByte1)
+		fmt.Printf("Все биты 133-го байта: %s\n", bitString1)
+	}
+
+	// Формирование структуры PacketInfo
+	packetInfo := PacketInfo{
+		SrcIP:    srcIPStr,
+		DstIP:    dstIPStr,
+		SrcPort:  srcPortStr,
+		DstPort:  dstPortStr,
+		Protocol: protocolString,
+	}
+
+	return packetInfo, nil
 }

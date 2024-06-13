@@ -5,12 +5,11 @@ import (
 	"sync"
 
 	"github.com/Gazmasater/netlink/internal/netlinkdecode"
+	"github.com/Gazmasater/netlink/pkg/logger"
 	"github.com/Gazmasater/netlink/pkg/printtcpudp"
 	"github.com/mdlayher/netlink"
 	"github.com/pkg/errors"
 	"golang.org/x/sys/unix"
-
-	"github.com/Gazmasater/netlink/pkg/logger"
 )
 
 type Collector struct {
@@ -27,6 +26,7 @@ func (c *Collector) Run(ctx context.Context) error {
 	c.onceRun.Do(func() {
 		doRun = true
 		c.stopped = make(chan struct{})
+		c.stop = make(chan struct{})
 		c.RcvNetlinkMsgs = make(chan []netlink.Message)
 	})
 	if !doRun {
@@ -51,17 +51,22 @@ func (c *Collector) Run(ctx context.Context) error {
 	}
 
 	go func() {
+		defer close(c.RcvNetlinkMsgs) // Закрываем канал при завершении горутины
 		for {
-			msgs, err := conn.Receive()
-			if err != nil {
-				log.Errorf("Ошибка приема сообщений от netlink: %v", err)
+			select {
+			case <-c.stop:
 				return
-			}
+			default:
+				msgs, err := conn.Receive()
+				if err != nil {
+					log.Errorf("Ошибка приема сообщений от netlink: %v", err)
+					return
+				}
 
-			for _, msg := range msgs {
-				if len(msg.Data) == 160 {
-					c.RcvNetlinkMsgs <- msgs
-
+				for _, msg := range msgs {
+					if len(msg.Data) == 160 {
+						c.RcvNetlinkMsgs <- msgs
+					}
 				}
 			}
 		}
@@ -83,16 +88,21 @@ func (c *Collector) Run(ctx context.Context) error {
 			for _, msg := range msgs {
 				var pktInfo netlinkdecode.PacketInfo
 
-				pktInfo, _ = netlinkdecode.Decode(msg)
+				pktInfo, err := netlinkdecode.Decode(msg)
+				if err != nil {
+					log.Errorf("Ошибка декодирования netlink сообщения: %v", err)
+					continue
+				}
 				printtcpudp.PrintPacketInfo(pktInfo)
 			}
 		}
 	}
 }
+
 func (c *Collector) Close() error {
 	c.onceClose.Do(func() {
 		close(c.stop)
-		c.onceRun.Do(func() {})
+		c.onceRun.Do(func() {}) // Сбрасываем onceRun
 		if c.stopped != nil {
 			<-c.stopped
 		}
