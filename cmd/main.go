@@ -16,7 +16,9 @@ func main() {
 	logger.SetLevel(zap.DebugLevel)
 	logger.Info(ctx, "-= HELLO =-")
 
-	collector := &netlinkprocess.Collector{}
+	collector := netlinkprocess.NewCollector()
+	logger.Info(ctx, "Collector initialized:")
+
 	if err := collector.Run(ctx); err != nil {
 		logger.Error(ctx, "Error running collector", zap.Error(err))
 	}
