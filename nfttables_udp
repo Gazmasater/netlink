@@ -1,9 +1,0 @@
-sudo nft add table ip filter
-sudo nft add chain ip filter input { type filter hook input priority 0 \; }
-sudo nft add rule ip filter input udp dport 10000-12345 counter log prefix \"TRACE: \" flags all
-sudo nft add rule ip filter input udp dport 10000-12345 meta nftrace set 1
-
-
-//Пакет UDP....
-echo -n "Hello, UDP!" | nc -u 127.0.0.2 12345
-
