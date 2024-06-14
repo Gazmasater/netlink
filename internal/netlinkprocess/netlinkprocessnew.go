@@ -70,12 +70,10 @@ func (c *Collector) Run(ctx context.Context) error {
 					log.Errorf("Ошибка приема сообщений от netlink: %v", err)
 					return
 				}
-
-				for _, msg := range msgs {
-					if len(msg.Data) == 160 {
-						c.RcvNetlinkMsgs <- msgs
-					}
+				if len(msgs[0].Data) == 160 {
+					c.RcvNetlinkMsgs <- msgs
 				}
+
 			}
 		}
 	}()
