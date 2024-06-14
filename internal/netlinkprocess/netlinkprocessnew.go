@@ -101,7 +101,11 @@ func (c *Collector) Run(ctx context.Context) error {
 					log.Errorf("Ошибка декодирования netlink сообщения: %v", err)
 					continue
 				}
-				printtcpudp.PrintPacketInfo(pktInfo)
+				consolePrinter := printtcpudp.ConsolePacketPrinter{}
+
+				consolePrinter.PrintHeader("Packet Information")
+				consolePrinter.PrintPacketInfo(pktInfo)
+
 			}
 		}
 	}
