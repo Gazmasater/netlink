@@ -5,8 +5,8 @@ import (
 	"sync"
 
 	"github.com/Gazmasater/netlink/internal/netlinkdecode"
+	"github.com/Gazmasater/netlink/internal/printtcpudp"
 	"github.com/Gazmasater/netlink/pkg/logger"
-	"github.com/Gazmasater/netlink/pkg/printtcpudp"
 	"github.com/mdlayher/netlink"
 	"github.com/pkg/errors"
 	"golang.org/x/sys/unix"

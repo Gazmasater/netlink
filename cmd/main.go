@@ -17,6 +17,7 @@ func main() {
 	logger.Info(ctx, "-= HELLO =-")
 
 	collector := netlinkprocess.NewCollector()
+
 	logger.Info(ctx, "Collector initialized:")
 
 	if err := collector.Run(ctx); err != nil {
