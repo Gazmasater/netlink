@@ -18,11 +18,11 @@ func main() {
 
 	collector := netlinkprocess.NewCollector()
 
-	logger.Info(ctx, "Collector initialized:")
-
 	if err := collector.Run(ctx); err != nil {
 		logger.Error(ctx, "Error running collector", zap.Error(err))
 	}
+	defer collector.Close()
+
 	logger.SetLevel(zap.InfoLevel)
 	logger.Info(ctx, "-= BYE =-")
 }
