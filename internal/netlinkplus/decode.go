@@ -3,6 +3,7 @@ package netlinkplus
 
 import (
 	"encoding/binary"
+	"fmt"
 	"net"
 
 	"github.com/mdlayher/netlink"
@@ -106,6 +107,7 @@ func (pkt *PacketInfo) Decode(b []byte) (bool, error) {
 			pkt.SrcPort = binary.BigEndian.Uint16(b[:2])
 			pkt.DstPort = binary.BigEndian.Uint16(b[2:4])
 
+			fmt.Printf("b[13] in binary: %08b\n", b[13])
 		case unix.NFTA_TRACE_IIF:
 			flag = true
 
