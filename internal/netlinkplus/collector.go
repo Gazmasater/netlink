@@ -1,4 +1,4 @@
-package netlinkprocess
+package netlinkplus
 
 //       ^^^^^^^^^^^^ слишком длинное и сложное название для пакета - переименовать файл и пакет в collector
 
@@ -6,8 +6,6 @@ import (
 	"context"
 	"sync"
 
-	"github.com/Gazmasater/netlink/internal/netlinkdecode"
-	"github.com/Gazmasater/netlink/internal/printtcpudp"
 	"github.com/Gazmasater/netlink/pkg/logger"
 	"github.com/mdlayher/netlink"
 	"github.com/pkg/errors"
@@ -96,16 +94,17 @@ loop:
 				err = t
 			case []netlink.Message:
 				for _, msg := range t {
-					var pktInfo netlinkdecode.PacketInfo
-
-					err = pktInfo.Decode(msg.Data)
+					var pktInfo PacketInfo
+					flag, err := pktInfo.Decode(msg.Data)
 					if err != nil {
 						break
 					}
-					printer := printtcpudp.NewPrinter()
+					if !flag {
+						printer := NewPrinter()
+						printer.PrintHeader("Packet Information")
+						printer.PrintPacketInfo(pktInfo)
+					}
 
-					printer.PrintHeader("Packet Information")
-					printer.PrintPacketInfo(pktInfo)
 				}
 			}
 		case <-ctx.Done():
