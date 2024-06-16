@@ -98,8 +98,9 @@ loop:
 					pktInfo.SetLogger(logger.FromContext(ctx))
 
 					if pktInfo.IsReady() {
-						pktInfo.LogPacketInfo()
+
 						pktInfo.LogPacketFile()
+
 					}
 
 				}
