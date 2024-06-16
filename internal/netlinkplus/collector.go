@@ -100,6 +100,7 @@ loop:
 					if pktInfo.IsReady() {
 
 						pktInfo.LogPacketFile()
+						pktInfo.LogPacketInfo()
 
 					}
 
