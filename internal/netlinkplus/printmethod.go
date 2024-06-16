@@ -34,7 +34,7 @@ func (pkt *PacketInfo) LogPacketFile() {
 	// Open the file for writing (append mode), create it if it doesn't exist
 	file, err := os.OpenFile("packet_info.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		fmt.Printf("Error opening file: %v\n", err)
+		log.Fatalf("Error opening file: %v\n", err)
 		return
 	}
 	defer file.Close()
