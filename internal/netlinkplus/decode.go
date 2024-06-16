@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"net"
 
+	"github.com/Gazmasater/netlink/pkg/logger"
 	"github.com/mdlayher/netlink"
 	"github.com/pkg/errors"
 	"golang.org/x/sys/unix"
@@ -31,14 +32,32 @@ type (
 		DstPort  uint16
 		Protocol proto
 		Flag     uint16
+		logger   logger.TypeOfLogger
 	}
 )
+
+func (p *PacketInfo) SetLogger(log logger.TypeOfLogger) {
+	p.logger = log
+}
 
 func (pkt *PacketInfo) IsReady() bool {
 	requiredFlags := uint16(NFTNL_TRACE_NETWORK_HEADER | NFTNL_TRACE_TRANSPORT_HEADER)
 	return pkt.Flag&requiredFlags == requiredFlags
 }
 
+func (pkt *PacketInfo) LogPacketInfo() {
+	var protocolName string
+	switch pkt.Protocol {
+	case 6:
+		protocolName = "TCP"
+	case 17:
+		protocolName = "UDP"
+	default:
+		protocolName = "Unknown"
+	}
+	pkt.logger.Infof("Packet Information: SrcIP=%s, DstIP=%s, SrcPort=%d, DstPort=%d, Protocol=%s",
+		pkt.SrcIP, pkt.DstIP, pkt.SrcPort, pkt.DstPort, protocolName)
+}
 func (p proto) String() string {
 	switch p {
 	case unix.IPPROTO_TCP:

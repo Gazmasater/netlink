@@ -94,10 +94,11 @@ loop:
 					if err != nil {
 						break
 					}
+
+					pktInfo.SetLogger(logger.FromContext(ctx))
+
 					if pktInfo.IsReady() {
-						printer := NewPrinter()
-						printer.PrintHeader("Packet Information")
-						printer.PrintPacketInfo(pktInfo)
+						pktInfo.LogPacketInfo()
 					}
 				}
 			}
