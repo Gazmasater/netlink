@@ -2,7 +2,6 @@ package netlinkplus
 
 import (
 	"fmt"
-	"log"
 	"os"
 )
 
@@ -34,7 +33,7 @@ func (pkt *PacketInfo) LogPacketFile() {
 	// Open the file for writing (append mode), create it if it doesn't exist
 	file, err := os.OpenFile("packet_info.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		log.Fatalf("Error opening file: %v\n", err)
+		pkt.logger.Fatalf("Error opening file: %v\n", err)
 		return
 	}
 	defer file.Close()
@@ -44,6 +43,6 @@ func (pkt *PacketInfo) LogPacketFile() {
 		pkt.SrcIP, pkt.DstIP, pkt.SrcPort, pkt.DstPort, protocolName)
 
 	if _, err := file.WriteString(logMessage); err != nil {
-		log.Fatalf("Error writing to file: %v\n", err)
+		pkt.logger.Fatalf("Error writing to file: %v\n", err)
 	}
 }
