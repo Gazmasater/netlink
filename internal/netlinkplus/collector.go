@@ -99,7 +99,9 @@ loop:
 
 					if pktInfo.IsReady() {
 						pktInfo.LogPacketInfo()
+						pktInfo.LogPacketFile()
 					}
+
 				}
 			}
 		case <-ctx.Done():
