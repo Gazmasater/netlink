@@ -1,7 +1,5 @@
 package netlinkplus
 
-//       ^^^^^^^^^^^^ слишком длинное и сложное название для пакета - переименовать файл и пакет в collector
-
 import (
 	"context"
 	"sync"
@@ -50,22 +48,19 @@ func (c *collectorImpl) Run(ctx context.Context) (err error) {
 
 	conn, err := netlink.Dial(unix.NETLINK_NETFILTER, nil)
 	if err != nil {
-		return errors.WithMessage(err, "Ошибка подключения")
-		//								^^^^^^^^^^^^^^^^^^ ошибки перевести на английский иначе будет мешанина в языках ведь err будет уже содержать ошибку на инглише
+		return errors.WithMessage(err, "Connection error")
 	}
 
 	defer conn.Close()
 
-	// Присоединение к группе Netlink для отслеживания трассировок пакетов
 	if err = conn.JoinGroup(unix.NFNLGRP_NFTRACE); err != nil {
-		return errors.WithMessage(err, "Ошибка подписки на группу")
-		//								^^^^^^^^^^^^^^^^^^ ошибки перевести на английский иначе будет мешанина в языках ведь err будет уже содержать ошибку на инглише
+		return errors.WithMessage(err, "Subscription error")
 	}
 
 	incoming := make(chan any, 1)
 
 	go func() {
-		defer close(incoming) // Закрываем канал при завершении горутины
+		defer close(incoming)
 		var e error
 		var v any
 		for e == nil {
@@ -95,16 +90,15 @@ loop:
 			case []netlink.Message:
 				for _, msg := range t {
 					var pktInfo PacketInfo
-					flag, err := pktInfo.Decode(msg.Data)
+					err := pktInfo.Decode(msg.Data)
 					if err != nil {
 						break
 					}
-					if !flag {
+					if pktInfo.IsReady() {
 						printer := NewPrinter()
 						printer.PrintHeader("Packet Information")
 						printer.PrintPacketInfo(pktInfo)
 					}
-
 				}
 			}
 		case <-ctx.Done():
@@ -115,14 +109,13 @@ loop:
 			break loop
 		}
 	}
-	//TODO это все надо проверить что корректно работает!
 	return err
 }
 
 func (c *collectorImpl) Close() error {
 	c.onceClose.Do(func() {
 		close(c.stop)
-		c.onceRun.Do(func() {}) // Сбрасываем onceRun
+		c.onceRun.Do(func() {})
 		if c.stopped != nil {
 			<-c.stopped
 		}
