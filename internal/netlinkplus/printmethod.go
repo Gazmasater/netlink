@@ -2,6 +2,7 @@ package netlinkplus
 
 import (
 	"fmt"
+	"log"
 	"os"
 )
 
@@ -43,6 +44,6 @@ func (pkt *PacketInfo) LogPacketFile() {
 		pkt.SrcIP, pkt.DstIP, pkt.SrcPort, pkt.DstPort, protocolName)
 
 	if _, err := file.WriteString(logMessage); err != nil {
-		fmt.Printf("Error writing to file: %v\n", err)
+		log.Fatalf("Error writing to file: %v\n", err)
 	}
 }
