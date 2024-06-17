@@ -24,6 +24,7 @@ func (p proto) String() string {
 		return "dccp"
 	case unix.IPPROTO_SCTP:
 		return "sctp"
+
 	}
 	return "unknown"
 }

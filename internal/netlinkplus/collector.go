@@ -108,6 +108,7 @@ loop:
 			}
 		case <-ctx.Done():
 			log.Info("will exit cause ctx canceled")
+
 			err = ctx.Err()
 		case <-c.stop:
 			log.Info("will exit cause it has closed")
