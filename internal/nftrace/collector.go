@@ -1,4 +1,4 @@
-package netlinkplus
+package nftrace
 
 import (
 	"context"
@@ -48,13 +48,13 @@ func (c *collectorImpl) Run(ctx context.Context) (err error) {
 
 	conn, err := netlink.Dial(unix.NETLINK_NETFILTER, nil)
 	if err != nil {
-		return errors.WithMessage(err, "Connection error")
+		return errors.WithMessage(err, "failed to create netlink connection")
 	}
 
 	defer conn.Close()
 
 	if err = conn.JoinGroup(unix.NFNLGRP_NFTRACE); err != nil {
-		return errors.WithMessage(err, "Subscription error")
+		return errors.WithMessage(err, "failed to join to the netlink NFTRACE group")
 	}
 
 	incoming := make(chan any, 1)
@@ -89,21 +89,15 @@ loop:
 				err = t
 			case []netlink.Message:
 				for _, msg := range t {
-					var pktInfo PacketInfo
-					err := pktInfo.Decode(msg.Data)
+					var trace Trace
+					err := trace.Decode(msg.Data)
 					if err != nil {
 						break
 					}
 
-					pktInfo.SetLogger(logger.FromContext(ctx))
-
-					if pktInfo.IsReady() {
-
-						pktInfo.LogPacketFile()
-						pktInfo.LogPacketInfo()
-
+					if trace.IsReady() {
+						log.Info(trace.String())
 					}
-
 				}
 			}
 		case <-ctx.Done():
