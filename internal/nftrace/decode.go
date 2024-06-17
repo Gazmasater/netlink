@@ -1,4 +1,3 @@
-// TODO перенести этот файл в пакет netlink (см TODO)
 package nftrace
 
 import (
@@ -9,20 +8,6 @@ import (
 	"github.com/mdlayher/netlink"
 	"github.com/pkg/errors"
 	"golang.org/x/sys/unix"
-)
-
-const (
-	NFTNL_TRACE_NETWORK_HEADER = 1 << iota
-	NFTNL_TRACE_TRANSPORT_HEADER
-)
-
-const (
-	// Transport layer header length
-	TlHeaderLen = 8
-	// Network layer header length
-	NlHeaderLen = 20
-	// Offset attribute data in the nft netlink group message
-	NlNftAttrOffset = 4
 )
 
 type (
