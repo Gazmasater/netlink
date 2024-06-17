@@ -1,6 +1,5 @@
 flags
-nftables_tcp
-nfttables_udp
+nftables
 struct_tcp
 tcpdump
 ii
