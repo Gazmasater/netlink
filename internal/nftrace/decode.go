@@ -85,6 +85,7 @@ func (t *Trace) Decode(b []byte) error {
 			t.Data.Protocol = proto(b[9])
 			if t.Data.Protocol == proto(unix.IPPROTO_TCP) {
 				t.Data.Flags = (b[6] >> 5)
+
 			}
 
 			t.Flag |= NFTNL_TRACE_NETWORK_HEADER
