@@ -1,11 +1,11 @@
 // TODO перенести этот файл в пакет netlink (см TODO)
-package netlinkplus
+package nftrace
 
 import (
 	"encoding/binary"
+	"fmt"
 	"net"
 
-	"github.com/Gazmasater/netlink/pkg/logger"
 	"github.com/mdlayher/netlink"
 	"github.com/pkg/errors"
 	"golang.org/x/sys/unix"
@@ -14,7 +14,9 @@ import (
 const (
 	NFTNL_TRACE_NETWORK_HEADER = 1 << iota
 	NFTNL_TRACE_TRANSPORT_HEADER
+)
 
+const (
 	// Transport layer header length
 	TlHeaderLen = 8
 	// Network layer header length
@@ -24,40 +26,31 @@ const (
 )
 
 type (
-	proto      uint8
-	PacketInfo struct {
+	proto   uint8
+	pktInfo struct {
 		SrcIP    string
 		DstIP    string
 		SrcPort  uint16
 		DstPort  uint16
 		Protocol proto
-		Flag     uint16
-		logger   logger.TypeOfLogger
+		// tcp flags: syn, ack, etc...
+		Flags uint8 // 3 bits
+	}
+	Trace struct {
+		Data pktInfo
+		Flag uint16
 	}
 )
 
-func (p *PacketInfo) SetLogger(log logger.TypeOfLogger) {
-	p.logger = log
+func (t *Trace) IsReady() bool {
+	return t.Flag&NFTNL_TRACE_NETWORK_HEADER != 0 && t.Flag&NFTNL_TRACE_TRANSPORT_HEADER != 0
 }
 
-func (pkt *PacketInfo) IsReady() bool {
-	requiredFlags := uint16(NFTNL_TRACE_NETWORK_HEADER | NFTNL_TRACE_TRANSPORT_HEADER)
-	return pkt.Flag&requiredFlags == requiredFlags
+func (t *Trace) String() string {
+	return fmt.Sprintf("Packet Information: SrcIP=%s, DstIP=%s, SrcPort=%d, DstPort=%d, Protocol=%s",
+		t.Data.SrcIP, t.Data.DstIP, t.Data.SrcPort, t.Data.DstPort, t.Data.Protocol)
 }
 
-func (pkt *PacketInfo) LogPacketInfo() {
-	var protocolName string
-	switch pkt.Protocol {
-	case 6:
-		protocolName = "TCP"
-	case 17:
-		protocolName = "UDP"
-	default:
-		protocolName = "Unknown"
-	}
-	pkt.logger.Infof("Packet Information: SrcIP=%s, DstIP=%s, SrcPort=%d, DstPort=%d, Protocol=%s",
-		pkt.SrcIP, pkt.DstIP, pkt.SrcPort, pkt.DstPort, protocolName)
-}
 func (p proto) String() string {
 	switch p {
 	case unix.IPPROTO_TCP:
@@ -84,7 +77,7 @@ func (p proto) String() string {
 	return "unknown"
 }
 
-func (pkt *PacketInfo) Decode(b []byte) error {
+func (t *Trace) Decode(b []byte) error {
 	ad, err := netlink.NewAttributeDecoder(b[NlNftAttrOffset:])
 	if err != nil {
 		return errors.WithMessage(err, "failed to create new nl attribute decoder")
@@ -102,18 +95,22 @@ func (pkt *PacketInfo) Decode(b []byte) error {
 			dstIP := make(net.IP, net.IPv4len)
 			copy(srcIP, b[12:16])
 			copy(dstIP, b[16:20])
-			pkt.SrcIP = srcIP.String()
-			pkt.DstIP = dstIP.String()
-			pkt.Protocol = proto(b[9])
-			pkt.Flag |= NFTNL_TRACE_NETWORK_HEADER
+			t.Data.SrcIP = srcIP.String()
+			t.Data.DstIP = dstIP.String()
+			t.Data.Protocol = proto(b[9])
+			if t.Data.Protocol == proto(unix.IPPROTO_TCP) {
+				t.Data.Flags = (b[6] >> 5)
+			}
+
+			t.Flag |= NFTNL_TRACE_NETWORK_HEADER
 		case unix.NFTA_TRACE_TRANSPORT_HEADER:
 			b := ad.Bytes()
 			if l := len(b); l < TlHeaderLen {
 				return errors.Errorf("incorrect TlHeader binary length=%d", l)
 			}
-			pkt.SrcPort = binary.BigEndian.Uint16(b[:2])
-			pkt.DstPort = binary.BigEndian.Uint16(b[2:4])
-			pkt.Flag |= NFTNL_TRACE_TRANSPORT_HEADER
+			t.Data.SrcPort = binary.BigEndian.Uint16(b[:2])
+			t.Data.DstPort = binary.BigEndian.Uint16(b[2:4])
+			t.Flag |= NFTNL_TRACE_TRANSPORT_HEADER
 		}
 	}
 	if ad.Err() != nil {

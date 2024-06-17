@@ -5,7 +5,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/Gazmasater/netlink/internal/netlinkplus"
+	"github.com/Gazmasater/netlink/internal/nftrace"
 	"github.com/Gazmasater/netlink/pkg/logger"
 	"go.uber.org/zap"
 )
@@ -17,7 +17,7 @@ func main() {
 	logger.SetLevel(zap.DebugLevel)
 	logger.Info(ctx, "-= HELLO =-")
 
-	collector := netlinkplus.NewCollector()
+	collector := nftrace.NewCollector()
 
 	if err := collector.Run(ctx); err != nil {
 		logger.Error(ctx, "Error running collector", zap.Error(err))
