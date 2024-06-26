@@ -63,6 +63,7 @@ func (p proto) String() string {
 }
 
 func (t *Trace) Decode(b []byte) error {
+
 	ad, err := netlink.NewAttributeDecoder(b[NlNftAttrOffset:])
 	if err != nil {
 		return errors.WithMessage(err, "failed to create new nl attribute decoder")
@@ -95,6 +96,7 @@ func (t *Trace) Decode(b []byte) error {
 			}
 			t.Data.SrcPort = binary.BigEndian.Uint16(b[:2])
 			t.Data.DstPort = binary.BigEndian.Uint16(b[2:4])
+			fmt.Printf("FLAGS:=%08b\n", b[13])
 			t.Flag |= NFTNL_TRACE_TRANSPORT_HEADER
 		}
 	}
