@@ -5,8 +5,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/Gazmasater/netlink/internal/nftrace"
-	"github.com/Gazmasater/netlink/pkg/logger"
+	"github.com/Gazmasater/internal/nftrace"
+	"github.com/Gazmasater/pkg/logger"
 	"go.uber.org/zap"
 )
 
