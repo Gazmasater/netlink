@@ -98,7 +98,6 @@ func (t *Trace) Decode(b []byte) error {
 			}
 
 			t.Flag |= NFTNL_TRACE_TRANSPORT_HEADER
-			fmt.Println("t.Data.Flags", t.Data.Flags)
 		}
 	}
 	if ad.Err() != nil {
