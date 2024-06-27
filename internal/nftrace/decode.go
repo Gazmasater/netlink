@@ -84,11 +84,8 @@ func (t *Trace) Decode(b []byte) error {
 			t.Data.SrcIP = srcIP.String()
 			t.Data.DstIP = dstIP.String()
 			t.Data.Protocol = proto(b[9])
-			if t.Data.Protocol == proto(unix.IPPROTO_TCP) {
-				t.Data.Flags = (b[6] >> 5)
-			}
 
-			t.Flag |= NFTNL_TRACE_NETWORK_HEADER
+			t.Flag = NFTNL_TRACE_NETWORK_HEADER
 		case unix.NFTA_TRACE_TRANSPORT_HEADER:
 			b := ad.Bytes()
 			if l := len(b); l < TlHeaderLen {
@@ -96,8 +93,12 @@ func (t *Trace) Decode(b []byte) error {
 			}
 			t.Data.SrcPort = binary.BigEndian.Uint16(b[:2])
 			t.Data.DstPort = binary.BigEndian.Uint16(b[2:4])
-			fmt.Printf("FLAGS:=%08b\n", b[13])
+			if t.Data.Protocol == proto(unix.IPPROTO_TCP) {
+				t.Data.Flags = (b[13] >> 1)
+			}
+
 			t.Flag |= NFTNL_TRACE_TRANSPORT_HEADER
+			fmt.Println("t.Data.Flags", t.Data.Flags)
 		}
 	}
 	if ad.Err() != nil {
