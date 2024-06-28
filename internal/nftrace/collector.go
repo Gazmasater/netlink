@@ -47,15 +47,15 @@ func (c *collectorImpl) Run(ctx context.Context) (err error) {
 		close(c.stopped)
 	}()
 
-	fd, err := unix.Socket(unix.AF_NETLINK, unix.SOCK_RAW, unix.NETLINK_NETFILTER)
+	conn, err := netlink.Dial(unix.NETLINK_NETFILTER, nil)
 	if err != nil {
-		return errors.New("failed to create netlink socket")
+		return errors.WithMessage(err, "failed to create netlink connection")
 	}
-	defer unix.Close(fd)
 
-	// Присоединение к группе NFTRACE
-	if err := unix.SetsockoptInt(fd, unix.SOL_NETLINK, unix.NETLINK_ADD_MEMBERSHIP, unix.NFNLGRP_NFTRACE); err != nil {
-		return errors.New("failed to join NFTRACE group")
+	defer conn.Close()
+
+	if err = conn.JoinGroup(unix.NFNLGRP_NFTRACE); err != nil {
+		return errors.WithMessage(err, "failed to join to the netlink NFTRACE group")
 	}
 
 	incoming := make(chan any, 1)
