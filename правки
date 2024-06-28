@@ -1,0 +1,72 @@
+package main
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"golang.org/x/sys/unix"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+)
+
+func main() {
+	// Создание контекста и каналов для управления горутинами
+	ctx, cancel := context.WithCancel(context.Background())
+	stop := make(chan struct{})
+	defer cancel()
+
+	// Создание Netlink соединения
+	fd, err := unix.Socket(unix.AF_NETLINK, unix.SOCK_RAW, unix.NETLINK_NETFILTER)
+	if err != nil {
+		fmt.Println("Ошибка создания Netlink соединения:", err)
+		return
+	}
+	defer unix.Close(fd)
+
+	// Присоединение к группе NFTRACE
+	err = unix.SetsockoptInt(fd, unix.SOL_NETLINK, unix.NETLINK_ADD_MEMBERSHIP, unix.NFNLGRP_NFTRACE)
+	if err != nil {
+		fmt.Println("Ошибка присоединения к группе NFTRACE:", err)
+		return
+	}
+
+	// Канал для приема входящих сообщений
+	incoming := make(chan interface{}, 1)
+
+	// Запуск горутины для чтения сообщений
+	go func() {
+		defer close(incoming)
+		var buf [8192]byte
+		for {
+			select {
+			case <-stop:
+				return
+			default:
+				n, err := unix.Read(fd, buf[:])
+				if err != nil {
+					incoming <- err
+					return
+				}
+				incoming <- buf[:n]
+			}
+		}
+	}()
+
+	// Ожидание сигнала завершения
+	signalCh := make(chan os.Signal, 1)
+	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
+
+	// Ожидание завершения работы
+	select {
+	case <-ctx.Done():
+		fmt.Println("Контекст завершен:", ctx.Err())
+	case sig := <-signalCh:
+		fmt.Println("Получен сигнал завершения:", sig)
+	}
+
+	// Остановка работы
+	close(stop)
+}
+
